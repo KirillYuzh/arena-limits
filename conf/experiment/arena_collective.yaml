@@ -1,0 +1,59 @@
+experiment_id: arena_collective
+mode: portfolio
+
+scenario:
+  scenario_id: parts_coll_v1
+  item: industrial spare parts lot
+  floor_price: 100.0
+  opening_offer: 60.0
+  target_offer: 95.0
+  max_rounds: 8
+
+opponents:
+  - { opponent_id: opp_lowball, strategy: lowball }
+
+agent_pool:
+  - {
+      agent_id: g2_a,
+      model: gigachat/GigaChat-2,
+      prompt_template: neutral,
+      backbone: gigachat-2,
+    }
+  - {
+      agent_id: g2_b,
+      model: gigachat/GigaChat-2,
+      prompt_template: neutral,
+      backbone: gigachat-2,
+    }
+  - {
+      agent_id: g2p_a,
+      model: gigachat/GigaChat-2-Pro,
+      prompt_template: neutral,
+      backbone: gigachat-2-pro,
+    }
+  - {
+      agent_id: g2p_b,
+      model: gigachat/GigaChat-2-Pro,
+      prompt_template: neutral,
+      backbone: gigachat-2-pro,
+    }
+  - {
+      agent_id: gem_a,
+      model: ollama/gemma2:2b,
+      prompt_template: neutral,
+      backbone: gemma2-2b,
+    }
+  - {
+      agent_id: gem_b,
+      model: ollama/gemma2:2b,
+      prompt_template: neutral,
+      backbone: gemma2-2b,
+    }
+
+shock_sd: 0.15
+shock_seed: 0
+sessions: 60
+control_arm: true
+
+storage:
+  path: arena_collective.duckdb

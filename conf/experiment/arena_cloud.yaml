@@ -1,0 +1,38 @@
+# Облачная ветка исследования 1: тот же дизайн, что arena_multi.yaml, но без
+# локальных моделей (ollama остановлен). 3 бэкбона Sber × 3 персоны + DeepSeek;
+# 6 противников по обе стороны пола; 8 раундов.
+
+experiment_id: arena_cloud
+
+scenario:
+  scenario_id: parts_nego_v2
+  item: industrial spare parts lot
+  floor_price: 100.0
+  opening_offer: 60.0
+  target_offer: 95.0
+  max_rounds: 8
+
+opponents:
+  - { opponent_id: opp_lowball, strategy: lowball }
+  - { opponent_id: opp_guilt, strategy: guilt_trip }
+  - { opponent_id: opp_aggressive, strategy: aggressive }
+  - { opponent_id: opp_urgency, strategy: urgency }
+  - { opponent_id: opp_squeeze, strategy: squeeze }
+  - { opponent_id: opp_hardball, strategy: hardball }
+
+agent_pool:
+  - { agent_id: g2_soft, model: gigachat/GigaChat-2, prompt_template: soft, backbone: gigachat-2 }
+  - { agent_id: g2_neutral, model: gigachat/GigaChat-2, prompt_template: neutral, backbone: gigachat-2 }
+  - { agent_id: g2_strict, model: gigachat/GigaChat-2, prompt_template: strict, backbone: gigachat-2 }
+  - { agent_id: g2p_soft, model: gigachat/GigaChat-2-Pro, prompt_template: soft, backbone: gigachat-2-pro }
+  - { agent_id: g2p_neutral, model: gigachat/GigaChat-2-Pro, prompt_template: neutral, backbone: gigachat-2-pro }
+  - { agent_id: g2p_strict, model: gigachat/GigaChat-2-Pro, prompt_template: strict, backbone: gigachat-2-pro }
+  - { agent_id: g2m_soft, model: gigachat/GigaChat-2-Max, prompt_template: soft, backbone: gigachat-2-max }
+  - { agent_id: g2m_neutral, model: gigachat/GigaChat-2-Max, prompt_template: neutral, backbone: gigachat-2-max }
+  - { agent_id: g2m_strict, model: gigachat/GigaChat-2-Max, prompt_template: strict, backbone: gigachat-2-max }
+  - { agent_id: ds_neutral, model: deepseek/deepseek-v4-flash, prompt_template: neutral, backbone: deepseek-v4-flash }
+
+K: 5
+
+storage:
+  path: arena_cloud.duckdb

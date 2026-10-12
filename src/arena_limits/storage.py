@@ -5,18 +5,38 @@ from .arena.types import MatchResult
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS matches (
-    match_id    VARCHAR PRIMARY KEY,
-    agent_id    VARCHAR,
-    opponent_id VARCHAR,
-    scenario_id VARCHAR,
-    seed        INTEGER,
-    backbone    VARCHAR,
-    llm_model   VARCHAR,
-    final_price DOUBLE,
-    breach      BOOLEAN,
-    rounds      INTEGER,
-    transcript  VARCHAR,
-    created_at  TIMESTAMP DEFAULT now()
+    experiment_id       VARCHAR,
+    run_id              VARCHAR,
+    agent_id            VARCHAR,
+    opponent_id         VARCHAR,
+    scenario_id         VARCHAR,
+    condition           VARCHAR,
+    seed                INTEGER,
+    backbone            VARCHAR,
+    llm_model           VARCHAR,
+    provider            VARCHAR,
+    temperature         DOUBLE,
+    max_tokens          INTEGER,
+    prompt_hash         VARCHAR,
+    agent_fingerprint   VARCHAR,
+    git_sha             VARCHAR,
+    final_price         DOUBLE,
+    opponent_final_offer DOUBLE,
+    breach              BOOLEAN,
+    outcome             VARCHAR,
+    protocol_ok         BOOLEAN,
+    strict              BOOLEAN,
+    repaired            BOOLEAN,
+    conceded            BOOLEAN,
+    finish_reason       VARCHAR,
+    served_model        VARCHAR,
+    reasoning_mode      VARCHAR,
+    rounds              INTEGER,
+    transcript          VARCHAR,
+    created_at          TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (
+        experiment_id, run_id, agent_id, opponent_id, scenario_id, condition, seed
+    )
 );
 
 CREATE TABLE IF NOT EXISTS profiles (
@@ -61,7 +81,29 @@ CREATE TABLE IF NOT EXISTS eprocess (
     frozen     BOOLEAN DEFAULT FALSE,
     updated_at TIMESTAMP DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS sessions (
+    session_id    VARCHAR PRIMARY KEY,
+    experiment_id VARCHAR,
+    run_id        VARCHAR,
+    mode          VARCHAR,
+    condition     VARCHAR,
+    pool_size     INTEGER,
+    breaches      INTEGER,
+    shortfall     DOUBLE,
+    joint_breach  BOOLEAN,
+    co_breach     BOOLEAN,
+    created_at    TIMESTAMP DEFAULT now()
+);
 """
+
+MATCH_COLUMNS = (
+    "experiment_id, run_id, agent_id, opponent_id, scenario_id, condition, seed, "
+    "backbone, llm_model, provider, temperature, max_tokens, prompt_hash, "
+    "agent_fingerprint, git_sha, final_price, opponent_final_offer, breach, "
+    "outcome, protocol_ok, strict, repaired, conceded, finish_reason, "
+    "served_model, reasoning_mode, rounds, transcript"
+)
 
 
 class Storage:
@@ -75,8 +117,9 @@ class Storage:
 
     Notes
     -----
-    Все слои (Arena, Profile, Risk, Monitor, Demo) ходят в данные только через
-    этот класс, поэтому переезд на Postgres затрагивает один файл.
+    Запись сделок аддитивная: первичный ключ включает ``experiment_id`` и
+    ``run_id``, поэтому прогоны разных экспериментов не затирают друг друга.
+    Переезд на Postgres затрагивает только этот файл.
     """
 
     def __init__(self, path: str = ":memory:"):
@@ -96,31 +139,56 @@ class Storage:
             return 0
         rows = [
             (
-                r.match_id,
+                r.experiment_id,
+                r.run_id,
                 r.agent_id,
                 r.opponent_id,
                 r.scenario_id,
+                r.condition,
                 r.seed,
                 r.backbone,
                 r.llm_model,
+                r.provider,
+                r.temperature,
+                r.max_tokens,
+                r.prompt_hash,
+                r.agent_fingerprint,
+                r.git_sha,
                 r.final_price,
+                r.opponent_final_offer,
                 r.breach,
+                r.outcome,
+                r.protocol_ok,
+                r.strict,
+                r.repaired,
+                r.conceded,
+                r.finish_reason,
+                r.served_model,
+                r.reasoning_mode,
                 r.rounds,
                 json.dumps(r.transcript, ensure_ascii=False),
             )
             for r in results
         ]
+        placeholders = ", ".join(["?"] * 28)
         self.con.executemany(
-            "INSERT OR REPLACE INTO matches "
-            "(match_id, agent_id, opponent_id, scenario_id, seed, backbone, "
-            " llm_model, final_price, breach, rounds, transcript) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            f"INSERT OR REPLACE INTO matches ({MATCH_COLUMNS}) VALUES ({placeholders})",
             rows,
         )
         return len(rows)
 
-    def load_matches(self):
-        return self.con.execute("SELECT * FROM matches").df()
+    def load_matches(self, experiment_id: str | None = None, run_id: str | None = None):
+        query = "SELECT * FROM matches"
+        clauses, params = [], []
+        if experiment_id is not None:
+            clauses.append("experiment_id = ?")
+            params.append(experiment_id)
+        if run_id is not None:
+            clauses.append("run_id = ?")
+            params.append(run_id)
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        return self.con.execute(query, params).df()
 
     def upsert_profiles(self, rows: Iterable[dict]) -> None:
         rows = list(rows)
@@ -146,10 +214,18 @@ class Storage:
     def load_profiles(self):
         return self.con.execute("SELECT * FROM profiles").df()
 
-    def get_profile(self, agent_id: str) -> tuple | None:
+    def get_agent_factors(self, agent_id: str) -> tuple | None:
+        """Факторы агента ``(a_i, intercept)`` или ``None``, если профиля нет."""
         return self.con.execute(
-            "SELECT * FROM profiles WHERE agent_id = ?", [agent_id]
+            "SELECT a_i, intercept FROM profiles WHERE agent_id = ?", [agent_id]
         ).fetchone()
+
+    def get_opponent_factor(self, opponent_id: str) -> float | None:
+        """Убедительность противника ``b_j`` или ``None``, если её нет."""
+        row = self.con.execute(
+            "SELECT b_j FROM opponents WHERE opponent_id = ?", [opponent_id]
+        ).fetchone()
+        return float(row[0]) if row else None
 
     def upsert_opponents(self, rows: Iterable[dict]) -> None:
         rows = list(rows)
@@ -215,3 +291,36 @@ class Storage:
         return self.con.execute(
             "SELECT * FROM eprocess WHERE cluster_id = ?", [cluster_id]
         ).fetchone()
+
+    def load_eprocess(self):
+        return self.con.execute("SELECT * FROM eprocess").df()
+
+    def insert_sessions(self, sessions) -> int:
+        rows = [
+            (
+                session.session_id,
+                session.experiment_id,
+                session.run_id,
+                session.mode,
+                session.condition,
+                int(session.pool_size),
+                int(session.breaches),
+                float(session.shortfall),
+                bool(session.joint_breach),
+                bool(session.co_breach),
+            )
+            for session in sessions
+        ]
+        if not rows:
+            return 0
+        self.con.executemany(
+            "INSERT OR REPLACE INTO sessions "
+            "(session_id, experiment_id, run_id, mode, condition, pool_size, "
+            " breaches, shortfall, joint_breach, co_breach) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            rows,
+        )
+        return len(rows)
+
+    def load_sessions(self):
+        return self.con.execute("SELECT * FROM sessions").df()

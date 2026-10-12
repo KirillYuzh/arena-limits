@@ -5,9 +5,9 @@ model_list:
       api_key: os.environ/GIGACHAT_CREDENTIALS
       ssl_verify: false
 
-  - model_name: gigachat-3-lightning
+  - model_name: gigachat-2-pro
     litellm_params:
-      model: gigachat/GigaChat-3-Lightning
+      model: gigachat/GigaChat-2-Pro
       api_key: os.environ/GIGACHAT_CREDENTIALS
       ssl_verify: false
 
@@ -16,6 +16,71 @@ model_list:
       model: gigachat/GigaChat-2-Max
       api_key: os.environ/GIGACHAT_CREDENTIALS
       ssl_verify: false
+
+  - model_name: deepseek-v4-flash
+    litellm_params:
+      model: deepseek/deepseek-v4-flash
+      api_key: os.environ/DEEPSEEK_API_KEY
+
+  - model_name: openrouter-llama-3.3-70b
+    litellm_params:
+      model: openrouter/meta-llama/llama-3.3-70b-instruct
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-poolside-laguna-s-2.1
+    litellm_params:
+      model: openrouter/poolside/laguna-s-2.1:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-nemotron-3-ultra-550b
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-nemotron-3-super-120b
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-super-120b-a12b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-nemotron-3.5-lightning
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3.5-lightning:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-apodex-1.1-mini
+    litellm_params:
+      model: openrouter/apodex/apodex-1.1-mini:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-dots-3-note-preview
+    litellm_params:
+      model: openrouter/dots-studio/dots-3-note-preview:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-north-mini-code
+    litellm_params:
+      model: openrouter/cohere/north-mini-code:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-nemotron-3.5-content-safety
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3.5-content-safety:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: groq-gpt-oss-120b
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      api_key: os.environ/GROQ_API_KEY
+
+  - model_name: cerebras-llama-3.3-70b
+    litellm_params:
+      model: cerebras/llama-3.3-70b
+      api_key: os.environ/CEREBRAS_API_KEY
+
+  - model_name: gemini-2.5-flash-lite
+    litellm_params:
+      model: gemini/gemini-2.5-flash-lite
+      api_key: os.environ/GEMINI_API_KEY
 
 general_settings:
   master_key: os.environ/LITELLM_API_KEY

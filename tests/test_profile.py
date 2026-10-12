@@ -1,9 +1,16 @@
 import numpy as np
+import pandas as pd
 from fakes import FakeChatClient
 
 from arena_limits.arena.runner import run_match
 from arena_limits.arena.types import AgentSpec, Opponent, Scenario
-from arena_limits.profile.correlation import effective_n, tetrachoric_corr
+from arena_limits.profile.correlation import (
+    between_backbone_gap,
+    effective_n,
+    model_vs_persona_effect,
+    tetrachoric_corr,
+    within_backbone_variance,
+)
 from arena_limits.profile.irt import fit_irt
 from arena_limits.profile.pipeline import profile_matches
 from arena_limits.storage import Storage
@@ -74,3 +81,38 @@ def test_pipeline_reports_monoculture_gap():
     _, df = _frame()
     out = profile_matches(df, bootstrap=0)
     assert out["rho"]["within"] > out["rho"]["between"]
+
+
+def test_within_backbone_variance_zero_for_identical():
+    df = pd.DataFrame({"backbone": ["a", "a", "a"], "p_hat": [0.5, 0.5, 0.5]})
+    out = within_backbone_variance(df)
+    assert out["a"]["std"] == 0.0
+    assert out["a"]["n_agents"] == 3
+
+
+def test_between_backbone_gap_positive():
+    df = pd.DataFrame({"backbone": ["a", "a", "b", "b"], "p_hat": [0.1, 0.2, 0.8, 0.9]})
+    assert between_backbone_gap(df) > 0.5
+
+
+def test_model_vs_persona_effect_detects_gap():
+    df = pd.DataFrame(
+        {
+            "backbone": ["a", "a", "a", "b", "b", "b"],
+            "p_hat": [0.10, 0.11, 0.12, 0.80, 0.81, 0.82],
+        }
+    )
+    out = model_vs_persona_effect(df)
+    assert out["ratio"] > 5
+    assert out["anova_p"] < 0.01
+
+
+def test_model_vs_persona_effect_flat_when_no_gap():
+    df = pd.DataFrame(
+        {
+            "backbone": ["a", "a", "a", "b", "b", "b"],
+            "p_hat": [0.50, 0.51, 0.49, 0.50, 0.51, 0.49],
+        }
+    )
+    out = model_vs_persona_effect(df)
+    assert out["anova_p"] > 0.05

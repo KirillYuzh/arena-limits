@@ -1,0 +1,63 @@
+experiment_id: arena_openrouter
+
+scenario:
+  scenario_id: parts_nego_v2
+  item: industrial spare parts lot
+  floor_price: 100.0
+  opening_offer: 60.0
+  target_offer: 95.0
+  max_rounds: 8
+
+opponents:
+  - { opponent_id: opp_lowball, strategy: lowball }
+  - { opponent_id: opp_aggressive, strategy: aggressive }
+  - { opponent_id: opp_hardball, strategy: hardball }
+
+agent_pool:
+  - {
+      agent_id: orq_llama33,
+      model: openrouter/meta-llama/llama-3.3-70b-instruct,
+      prompt_template: neutral,
+      backbone: llama-3.3-70b,
+    }
+  - {
+      agent_id: orq_laguna_s,
+      model: openrouter/poolside/laguna-s-2.1:free,
+      prompt_template: neutral,
+      backbone: laguna-s-2.1,
+    }
+  - {
+      agent_id: orq_nemotron_ultra,
+      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free,
+      prompt_template: neutral,
+      backbone: nemotron-3-ultra-550b,
+    }
+  - {
+      agent_id: orq_nemotron_super,
+      model: openrouter/nvidia/nemotron-3-super-120b-a12b:free,
+      prompt_template: neutral,
+      backbone: nemotron-3-super-120b,
+    }
+  - {
+      agent_id: orq_nemotron_lightning,
+      model: openrouter/nvidia/nemotron-3.5-lightning:free,
+      prompt_template: neutral,
+      backbone: nemotron-3.5-lightning,
+    }
+  - {
+      agent_id: orq_apodex,
+      model: openrouter/apodex/apodex-1.1-mini:free,
+      prompt_template: neutral,
+      backbone: apodex-1.1-mini,
+    }
+  - {
+      agent_id: orq_dots,
+      model: openrouter/dots-studio/dots-3-note-preview:free,
+      prompt_template: neutral,
+      backbone: dots-3-note-preview,
+    }
+
+K: 1
+
+storage:
+  path: arena_openrouter.duckdb

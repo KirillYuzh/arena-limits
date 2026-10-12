@@ -1,0 +1,27 @@
+experiment_id: arena_dose
+
+scenario:
+  scenario_id: parts_dose_v1
+  item: industrial spare parts lot
+  floor_price: 100.0
+  opening_offer: 60.0
+  target_offer: 105.0
+  max_rounds: 5
+
+opponents:
+  - { opponent_id: opp_lowball, strategy: lowball }
+  - { opponent_id: opp_aggressive, strategy: aggressive }
+  - { opponent_id: opp_guilt, strategy: guilt_trip }
+
+agent_pool:
+  - { agent_id: g2_floor, model: gigachat/GigaChat-2, prompt_template: neutral, params: { mandate: floor }, backbone: gigachat-2 }
+  - { agent_id: g2_target, model: gigachat/GigaChat-2, prompt_template: neutral, params: { mandate: target }, backbone: gigachat-2 }
+  - { agent_id: g2_none, model: gigachat/GigaChat-2, prompt_template: neutral, params: { mandate: none }, backbone: gigachat-2 }
+  - { agent_id: q3_eager, model: ollama/qwen3:4b, prompt_template: eager, backbone: qwen3-4b }
+  - { agent_id: q3_neutral, model: ollama/qwen3:4b, prompt_template: neutral, backbone: qwen3-4b }
+  - { agent_id: q3_hardliner, model: ollama/qwen3:4b, prompt_template: hardliner, backbone: qwen3-4b }
+
+K: 3
+
+storage:
+  path: arena_dose.duckdb

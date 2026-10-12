@@ -46,15 +46,15 @@ def _run_pool(k=40):
 
 
 def test_parse_accept():
-    assert parse_action("ok, deal. [ACCEPT]") == ("accept", None)
+    assert parse_action("ok, deal. [ACCEPT]") == ("accept", None, False)
 
 
 def test_parse_offer():
-    assert parse_action("our price 105 [OFFER: 105]") == ("offer", 105.0)
+    assert parse_action("our price 105 [OFFER: 105]") == ("offer", 105.0, False)
 
 
 def test_parse_none():
-    assert parse_action("hmm") == ("none", None)
+    assert parse_action("hmm") == ("none", None, False)
 
 
 def test_detect_breach():

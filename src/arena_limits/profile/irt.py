@@ -20,11 +20,7 @@ class IRTResult:
 
 
 def _onehot(series: pd.Series, categories: list[str]) -> np.ndarray:
-    return (
-        pd.get_dummies(series)
-        .reindex(columns=categories, fill_value=0)
-        .to_numpy(dtype=float)
-    )
+    return pd.get_dummies(series).reindex(columns=categories, fill_value=0).to_numpy(dtype=float)
 
 
 def _sigmoid(x: float) -> float:
@@ -75,9 +71,9 @@ def fit_irt(df: pd.DataFrame, C: float = 1.0) -> IRTResult:
     coef = model.coef_[0]
     intercept = float(model.intercept_[0])
     n_agents, n_opponents = len(agents), len(opponents)
-    a = dict(zip(agents, coef[:n_agents].tolist()))
-    b = dict(zip(opponents, coef[n_agents : n_agents + n_opponents].tolist()))
-    gamma = dict(zip(scenarios, coef[n_agents + n_opponents :].tolist()))
+    a = dict(zip(agents, coef[:n_agents].tolist(), strict=True))
+    b = dict(zip(opponents, coef[n_agents : n_agents + n_opponents].tolist(), strict=True))
+    gamma = dict(zip(scenarios, coef[n_agents + n_opponents :].tolist(), strict=True))
 
     p_hat = {
         agent: float(
@@ -103,3 +99,34 @@ def fit_irt(df: pd.DataFrame, C: float = 1.0) -> IRTResult:
         p_hat=p_hat,
         log_loss=float(log_loss(target, model.predict_proba(design)[:, 1])),
     )
+
+
+def pair_probability(
+    irt: IRTResult, agent: str, opponent: str, scenario: str | None = None
+) -> float:
+    """
+    Вероятность пробоя для конкретной пары «агент × противник».
+
+    В отличие от ``p_hat`` (маргинал по всем противникам), это та величина,
+    которая нужна риск-слою для лимита по паре.
+
+    Parameters
+    ----------
+    irt : IRTResult
+        Оценённая логит-модель.
+    agent : str
+        Идентификатор агента.
+    opponent : str
+        Идентификатор противника.
+    scenario : str or None
+        Идентификатор сценария; при ``None`` вклад сценария не учитывается.
+
+    Returns
+    -------
+    float
+        Вероятность пробоя пары.
+    """
+    value = irt.intercept + irt.a[agent] + irt.b[opponent]
+    if scenario is not None and scenario in irt.gamma:
+        value += irt.gamma[scenario]
+    return _sigmoid(value)

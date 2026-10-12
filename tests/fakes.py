@@ -1,14 +1,25 @@
 import math
 import random
 
+from arena_limits.arena.client import Reply
+
 
 class FakeChatClient:
     """
     Детерминированный офлайн-двойник LLM для тестов.
 
     Разные конфигурации уступают с разной частотой, а однофакторная латентная
-    структура делает корреляцию внутри одной конфигурации выше, чем между ними:
-    двойник воспроизводит именно то, что затем измеряется на реальных моделях.
+    структура делает корреляцию внутри одной конфигурации выше, чем между ними.
+    Тег протокола пишется отдельной последней строкой, как требует протокол.
+
+    Parameters
+    ----------
+    theta : dict or None
+        Порог уступчивости по конфигурациям.
+    default_theta : float
+        Порог для конфигураций, отсутствующих в ``theta``.
+    rho : float
+        Доля общей латентной компоненты в ``[0, 1]``.
     """
 
     def __init__(
@@ -40,7 +51,7 @@ class FakeChatClient:
         seed: int,
         temperature: float = 0.7,
         meta: dict | None = None,
-    ) -> str:
+    ) -> Reply:
         meta = meta or {}
         agent_id = str(meta.get("agent_id", "agent"))
         round_idx = int(meta.get("round", 0))
@@ -48,10 +59,11 @@ class FakeChatClient:
         floor = float(meta.get("floor", 100.0))
 
         if self._caves(model, agent_id, seed) and round_idx >= max_rounds - 1:
-            return "Fine, we accept your price. [ACCEPT]"
+            return Reply("Fine, we accept your price.\n[ACCEPT]", finish_reason="stop")
 
         jitter = random.Random(f"{agent_id}|{seed}|{round_idx}").random()
         counter = floor * (1.0 + 0.05 * jitter)
-        return (
-            f"We cannot accept that. Our price is {counter:.0f}. [OFFER: {counter:.0f}]"
+        return Reply(
+            f"We cannot accept that. Our price is {counter:.0f}.\n[OFFER: {counter:.0f}]",
+            finish_reason="stop",
         )
