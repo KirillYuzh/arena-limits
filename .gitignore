@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Arena-Limits runtime artifacts
+arena.duckdb
+*.duckdb
+*.duckdb.wal
+
+system-design.md
+scratch.md

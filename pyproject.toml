@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arena-limits"
+version = "0.1.0"
+description = "Anytime-valid guarantee limits for agent-to-agent deals (MVP)"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=1.1",
+    "numpy>=1.26",
+    "scipy>=1.13",
+    "scikit-learn>=1.5",
+    "pandas>=2.2",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+llm = ["openai>=1.40", "litellm[proxy]>=1.50"]
+api = ["fastapi>=0.115", "uvicorn>=0.34"]
+demo = ["streamlit>=1.40", "plotly>=5.24"]
+dev = ["pytest>=8.3", "ruff>=0.8", "mypy>=1.13"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
