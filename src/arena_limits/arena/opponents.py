@@ -10,21 +10,6 @@ STRATEGY_TEMPLATES = {
 
 
 def offer_for_round(scenario: Scenario, round_idx: int) -> float:
-    """
-    Линейная лестница цен от ``opening_offer`` к ``target_offer``.
-
-    Parametrs
-    ----------
-    scenario : Scenario
-        Сценарий переговоров.
-    round_idx : int
-        Номер раунда, начиная с нуля.
-
-    Returns
-    -------
-    float
-        Цена предложения противника в этом раунде.
-    """
     if scenario.max_rounds <= 1:
         return scenario.target_offer
     frac = round_idx / (scenario.max_rounds - 1)

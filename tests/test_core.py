@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
+from fakes import FakeChatClient
 
-from arena_limits.arena.client import MockChatClient
 from arena_limits.arena.referee import detect_breach, parse_action
 from arena_limits.arena.runner import run_match
 from arena_limits.arena.types import AgentSpec, Opponent, Scenario
@@ -27,17 +27,17 @@ OPP = Opponent(opponent_id="opp_lowball", strategy="lowball")
 
 def _agents():
     return [
-        AgentSpec("soft_a", "mock/soft", "soft", backbone="mock/soft"),
-        AgentSpec("soft_b", "mock/soft", "soft", backbone="mock/soft"),
-        AgentSpec("neutral_a", "mock/neutral", "neutral", backbone="mock/neutral"),
-        AgentSpec("neutral_b", "mock/neutral", "neutral", backbone="mock/neutral"),
-        AgentSpec("strict_a", "mock/strict", "strict", backbone="mock/strict"),
-        AgentSpec("strict_b", "mock/strict", "strict", backbone="mock/strict"),
+        AgentSpec("soft_a", "fake/soft", "soft", backbone="fake/soft"),
+        AgentSpec("soft_b", "fake/soft", "soft", backbone="fake/soft"),
+        AgentSpec("neutral_a", "fake/neutral", "neutral", backbone="fake/neutral"),
+        AgentSpec("neutral_b", "fake/neutral", "neutral", backbone="fake/neutral"),
+        AgentSpec("strict_a", "fake/strict", "strict", backbone="fake/strict"),
+        AgentSpec("strict_b", "fake/strict", "strict", backbone="fake/strict"),
     ]
 
 
 def _run_pool(k=40):
-    client = MockChatClient()
+    client = FakeChatClient()
     return [
         run_match(agent, OPP, SCENARIO, seed=seed, client=client)
         for agent in _agents()
@@ -64,8 +64,8 @@ def test_detect_breach():
 
 
 def test_run_match_deterministic():
-    agent = AgentSpec("soft_a", "mock/soft", "soft", backbone="mock/soft")
-    client = MockChatClient()
+    agent = AgentSpec("soft_a", "fake/soft", "soft", backbone="fake/soft")
+    client = FakeChatClient()
     first = run_match(agent, OPP, SCENARIO, seed=7, client=client)
     second = run_match(agent, OPP, SCENARIO, seed=7, client=client)
     assert (first.breach, first.final_price, first.rounds) == (
@@ -77,8 +77,8 @@ def test_run_match_deterministic():
 
 
 def test_breach_implies_price_below_floor():
-    agent = AgentSpec("soft_a", "mock/soft", "soft", backbone="mock/soft")
-    client = MockChatClient()
+    agent = AgentSpec("soft_a", "fake/soft", "soft", backbone="fake/soft")
+    client = FakeChatClient()
     seen = False
     for seed in range(40):
         result = run_match(agent, OPP, SCENARIO, seed=seed, client=client)

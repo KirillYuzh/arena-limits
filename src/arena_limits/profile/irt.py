@@ -40,7 +40,7 @@ def fit_irt(df: pd.DataFrame, C: float = 1.0) -> IRTResult:
     ``gamma_c`` — фиксированный эффект сценария. Оценивается L2-логистической
     регрессией по one-hot признакам, поэтому отдельная реализация IRT не нужна.
 
-    Parametrs
+    Parameters
     ----------
     df : pandas.DataFrame
         Таблица прогонов со столбцами ``agent_id``, ``opponent_id``,

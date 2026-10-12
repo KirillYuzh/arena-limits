@@ -7,7 +7,7 @@ from typing import Any
 @dataclass(frozen=True)
 class AgentSpec:
     """
-    Конфигурация агента: модель, промпт-шаблон и Parametrs генерации.
+    Конфигурация агента: модель, промпт-шаблон и параметры генерации.
 
     Attributes
     ----------
@@ -18,7 +18,7 @@ class AgentSpec:
     prompt_template : str
         Ключ системного промпта из :data:`prompts.SYSTEM_PROMPTS`.
     params : dict
-        Дополнительные Parametrs генерации.
+        Дополнительные параметры генерации.
     backbone : str or None
         Кластер монокультуры; по умолчанию совпадает с ``model``.
     """
@@ -60,19 +60,6 @@ class AgentSpec:
 
 @dataclass(frozen=True)
 class Scenario:
-    """
-    Сценарий переговоров MVP: агент-продавец против покупателя-противника.
-
-    Attributes
-    ----------
-    floor_price : float
-        Цена-пол: минимальная цена, которую агент вправе принять.
-    opening_offer : float
-        Первое (заниженное) предложение противника.
-    target_offer : float
-        Лучшее предложение противника; всегда ниже ``floor_price``.
-    """
-
     scenario_id: str
     item: str
     floor_price: float
@@ -83,17 +70,6 @@ class Scenario:
 
 @dataclass(frozen=True)
 class Opponent:
-    """
-    Якорный противник с детерминированной стратегией давления.
-
-    Attributes
-    ----------
-    strategy : str
-        Ключ шаблона давления из :data:`opponents.STRATEGY_TEMPLATES`.
-    persuasiveness : float
-        Сила давления в ``[0, 1]``.
-    """
-
     opponent_id: str
     strategy: str
     persuasiveness: float = 0.5

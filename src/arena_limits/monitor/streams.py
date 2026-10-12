@@ -41,7 +41,7 @@ class ReplayStream(OutcomeStream):
     """
     Реплей реальных прогонов Arena — для оценки на фактических данных.
 
-    Parametrs
+    Parameters
     ----------
     records : iterable of dict
         Записи вида ``{"cluster": str, "y": 0|1, "q": float, "label": str}``.
@@ -115,12 +115,12 @@ def run_monitor(
     """
     Прогнать поток через независимые мониторы, по одному на кластер.
 
-    Parametrs
+    Parameters
     ----------
     stream : OutcomeStream
         Источник наблюдений.
     monitor_factory : callable
-        Returns новый монитор с методами ``update`` и ``state``.
+        Возвращает новый монитор с методами ``update`` и ``state``.
 
     Returns
     -------

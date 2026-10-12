@@ -1,9 +1,10 @@
 import argparse
+import os
 
 import yaml
 
 from arena_limits import config
-from arena_limits.arena.client import MockChatClient, OpenAIChatClient
+from arena_limits.arena.client import LiteLLMChatClient
 from arena_limits.arena.runner import run_match
 from arena_limits.arena.types import AgentSpec, Opponent, Scenario
 from arena_limits.storage import Storage
@@ -32,9 +33,6 @@ def main(argv: list[str] | None = None) -> int:
         "--config", required=True, help="путь к YAML-конфигу эксперимента"
     )
     parser.add_argument(
-        "--real", action="store_true", help="использовать LiteLLM Proxy вместо Mock"
-    )
-    parser.add_argument(
         "--k", type=int, default=None, help="переопределить число seed-ов"
     )
     args = parser.parse_args(argv)
@@ -45,10 +43,10 @@ def main(argv: list[str] | None = None) -> int:
     opponents = build_opponents(cfg)
     k = args.k or int(cfg.get("K", config.DEFAULT_K))
 
-    client = (
-        OpenAIChatClient(config.LITELLM_BASE_URL, config.LITELLM_API_KEY)
-        if args.real
-        else MockChatClient()
+    os.environ.setdefault("GIGACHAT_SCOPE", "GIGACHAT_API_PERS")
+    client = LiteLLMChatClient(
+        api_key=os.environ.get("GIGACHAT_CREDENTIALS"),
+        ssl_verify=False,
     )
 
     results = [
@@ -63,15 +61,16 @@ def main(argv: list[str] | None = None) -> int:
     storage.insert_matches(results)
 
     breaches = sum(int(result.breach) for result in results)
+    no_deal = sum(1 for result in results if result.final_price is None)
     print(
         f"db={db_path} matches={len(results)} breaches={breaches} "
-        f"rate={breaches / len(results):.3f}"
+        f"no_deal={no_deal} rate={breaches / len(results):.3f}"
     )
     for backbone in sorted({result.backbone for result in results}):
         rates = [
             int(result.breach) for result in results if result.backbone == backbone
         ]
-        print(f"  {backbone:>16}: rate={sum(rates) / len(rates):.3f} n={len(rates)}")
+        print(f"  {backbone:>22}: rate={sum(rates) / len(rates):.3f} n={len(rates)}")
     return 0
 
 

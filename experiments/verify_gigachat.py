@@ -1,9 +1,16 @@
 import os
+import sys
 from pathlib import Path
 
-from litellm import completion
+os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
+os.environ.setdefault("GIGACHAT_SCOPE", "GIGACHAT_API_PERS")
+os.environ.setdefault("LITELLM_LOG", "CRITICAL")
 
-MODEL = "gigachat/GigaChat-2-Max"
+CANDIDATES = [
+    "GigaChat-2",
+    "GigaChat-2-Pro",
+    "GigaChat-2-Max",
+]
 
 
 def load_env(path: Path) -> None:
@@ -17,48 +24,32 @@ def load_env(path: Path) -> None:
         os.environ.setdefault(key.strip(), value.strip())
 
 
-def attempt(label: str, **kwargs) -> bool:
+def probe(model: str) -> bool:
+    import litellm
+    from litellm import completion
+
+    litellm.suppress_debug_info = True
     try:
         response = completion(
-            model=MODEL,
+            model=f"gigachat/{model}",
             messages=[{"role": "user", "content": "Ответь одним словом: works?"}],
+            api_key=os.environ.get("GIGACHAT_CREDENTIALS"),
+            ssl_verify=False,
             max_tokens=32,
-            **kwargs,
         )
         content = (response.choices[0].message.content or "").strip()
-        print(f"OK[{label}] model={response.model} reply={content[:100]}")
+        print(f"RESULT OK   {model:>20} -> {content[:50]}")
         return True
     except Exception as exc:
-        print(f"FAIL[{label}] {type(exc).__name__}: {str(exc)[:220]}")
+        print(f"RESULT FAIL {model:>20} -> {str(exc)[:100]}")
         return False
 
 
 def main() -> int:
     load_env(Path(__file__).resolve().parents[1] / ".env")
-    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
-
-    print(
-        "cert env vars present:",
-        sorted(
-            k
-            for k in os.environ
-            if any(t in k.upper() for t in ("CERT", "CA_BUNDLE", "SSL"))
-        ),
-    )
-
-    credentials = os.environ.get("GIGACHAT_CREDENTIALS", "").strip()
-    if not credentials:
-        print("GIGACHAT_CREDENTIALS не задан: проверь .env")
-        return 1
-
-    os.environ.setdefault("GIGACHAT_SCOPE", "GIGACHAT_API_PERS")
-
-    if attempt("kwarg-ssl_verify", api_key=credentials, ssl_verify=False):
-        return 0
-    os.environ["GIGACHAT_VERIFY_SSL_CERTS"] = "False"
-    if attempt("env-verify-False", api_key=credentials):
-        return 0
-    return 2
+    available = [model for model in (sys.argv[1:] or CANDIDATES) if probe(model)]
+    print("AVAILABLE:", available)
+    return 0
 
 
 if __name__ == "__main__":

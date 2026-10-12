@@ -68,13 +68,13 @@ class Storage:
     """
     Единая точка доступа к DuckDB.
 
-    Parametrs
+    Parameters
     ----------
     path : str
         Путь к файлу DuckDB или ``":memory:"`` для тестов.
 
-    Замечания
-    --------
+    Notes
+    -----
     Все слои (Arena, Profile, Risk, Monitor, Demo) ходят в данные только через
     этот класс, поэтому переезд на Postgres затрагивает один файл.
     """

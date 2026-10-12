@@ -1,27 +1,27 @@
 import numpy as np
+from fakes import FakeChatClient
+
+from arena_limits.arena.runner import run_match
+from arena_limits.arena.types import AgentSpec, Opponent, Scenario
 from arena_limits.profile.correlation import effective_n, tetrachoric_corr
 from arena_limits.profile.irt import fit_irt
 from arena_limits.profile.pipeline import profile_matches
-
-from arena_limits.arena.client import MockChatClient
-from arena_limits.arena.runner import run_match
-from arena_limits.arena.types import AgentSpec, Opponent, Scenario
 from arena_limits.storage import Storage
 
 SCENARIO = Scenario("parts_nego_v1", "lot", 100.0, 60.0, 95.0, 8)
 OPPONENT = Opponent("opp_lowball", "lowball")
 AGENTS = [
-    AgentSpec("soft_a", "mock/soft", "soft", backbone="mock/soft"),
-    AgentSpec("soft_b", "mock/soft", "soft", backbone="mock/soft"),
-    AgentSpec("neutral_a", "mock/neutral", "neutral", backbone="mock/neutral"),
-    AgentSpec("neutral_b", "mock/neutral", "neutral", backbone="mock/neutral"),
-    AgentSpec("strict_a", "mock/strict", "strict", backbone="mock/strict"),
-    AgentSpec("strict_b", "mock/strict", "strict", backbone="mock/strict"),
+    AgentSpec("soft_a", "fake/soft", "soft", backbone="fake/soft"),
+    AgentSpec("soft_b", "fake/soft", "soft", backbone="fake/soft"),
+    AgentSpec("neutral_a", "fake/neutral", "neutral", backbone="fake/neutral"),
+    AgentSpec("neutral_b", "fake/neutral", "neutral", backbone="fake/neutral"),
+    AgentSpec("strict_a", "fake/strict", "strict", backbone="fake/strict"),
+    AgentSpec("strict_b", "fake/strict", "strict", backbone="fake/strict"),
 ]
 
 
 def _frame(k=40):
-    client = MockChatClient()
+    client = FakeChatClient()
     results = [
         run_match(agent, OPPONENT, SCENARIO, seed=seed, client=client)
         for agent in AGENTS

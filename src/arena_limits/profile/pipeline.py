@@ -24,7 +24,7 @@ def profile_matches(
     агентов, ``N_eff`` и бутстрэп-интервалы для ``rho_within``, ``rho_between``
     и ``N_eff``.
 
-    Parametrs
+    Parameters
     ----------
     df : pandas.DataFrame
         Таблица прогонов из :meth:`Storage.load_matches`.
